@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Generation Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #1c1c1c;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+        }
+        .form-container {
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+            background-color: #2a2a2a;
+            border-radius: 12px;
+            height: 100%;
+        }
+        .form-container h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #ff8c00;
+            text-align: center;
+        }
+        .form-container label {
+            font-size: 14px;
+            margin-top: 5px;
+            display: block;
+            color: #ff8c00;
+        }
+        .form-container textarea, .form-container input, .form-container button, .form-container select {
+            width: 100%;
+            margin: 5px 0;
+            padding: 5px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            background-color: #444;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        .form-container button {
+            background-color: #ff8c00;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .form-container button:hover {
+            background-color: #e07b00;
+        }
+        .image-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #2a2a2a;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+        }
+        .image-container img {
+            max-width: 100%;
+            max-height: 600px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+        .image-info {
+            color: #ff8c00;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .image-info p {
+            margin: 0;
+        }
+        .download-button {
+            background-color: #ff8c00;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            display: none;
+        }
+        .download-button:hover {
+            background-color: #e07b00;
+        }
+        .generated-images-section {
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+            background-color: #2a2a2a;
+            border-radius: 12px;
+            height: 100%;
+            overflow-y: auto;
+        }
+        .generated-images-section h2 {
+            font-size: 18px;
+            color: #ff8c00;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .generated-images-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .generated-image-card {
+            width: 100%;
+            background-color: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .generated-image-card:hover {
+            transform: scale(1.05);
+        }
+        .generated-image-card img {
+            width: 100%;
+            height: auto;
+            border-bottom: 1px solid #444;
+        }
+        .generated-image-card .prompt {
+            padding: 5px;
+            font-size: 12px;
+            color: #ff8c00;
+            text-align: center;
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #ff8c00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #imageModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #imageModal img {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        #imageModal .prompt {
+            color: #ffffff;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="form-container">
+            <h1>Generate Image</h1>
+            <form id="imageForm">
+                <label for="prompt">Prompt</label>
+                <textarea id="prompt" placeholder="Enter your prompt here" rows="4"></textarea>
+
+                <label for="width">Width</label>
+                <input type="number" id="width" placeholder="Width" value="800">
+
+                <label for="height">Height</label>
+                <input type="number" id="height" placeholder="Height" value="480">
+
+                <label for="seed">Seed</label>
+                <input type="number" id="seed" placeholder="Seed" value="0">
+
+                <label for="steps">Steps</label>
+                <input type="number" id="steps" placeholder="Steps" value="4">
+
+                <label for="sampler">Sampler</label>
+                <select id="sampler">
+                    <option value="euler">Euler</option>
+                    <option value="ddim">DDIM</option>
+                    <option value="plms">PLMS</option>
+                    <option value="dpm_solver">DPM Solver</option>
+                </select>
+
+                <label for="scheduler">Scheduler</label>
+                <input type="text" id="scheduler" placeholder="Scheduler" value="simple">
+
+                <button type="button" onclick="generateImage()">Generate Image</button>
+            </form>
+        </div>
+        <div class="image-container">
+            <img id="generatedImage" src="" alt="Generated Image">
+            <div class="image-info" id="imageInfo"></div>
+            <a id="downloadButton" class="download-button" href="#" download>Download Image</a>
+        </div>
+        <div class="generated-images-section">
+            <h2>Generated Images</h2>
+            <div id="generatedImagesContainer" class="generated-images-container"></div>
+        </div>
+    </div>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    <div id="imageModal">
+        <img src="" alt="Full Size Image">
+        <div class="prompt"></div>
+    </div>
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+            const width = document.getElementById('width').value;
+            const height = document.getElementById('height').value;
+            const seed = document.getElementById('seed').value;
+            const steps = document.getElementById('steps').value;
+            const sampler = document.getElementById('sampler').value;
+            const scheduler = document.getElementById('scheduler').value;
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const downloadButton = document.getElementById('downloadButton');
+
+            loadingOverlay.style.display = 'flex';
+
+            downloadButton.style.display = 'none';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, width, height, seed, steps, sampler, scheduler })
+                });
+
+                const data = await response.json();
+                const imageUrl = data.imageUrl;
+                const seedValue = data.seed;
+                document.getElementById('generatedImage').src = imageUrl;
+
+                const imageInfo = `Seed: ${seedValue}, Steps: ${steps}, Sampler: ${sampler}, Scheduler: ${scheduler}`;
+                document.getElementById('imageInfo').innerText = imageInfo;
+
+                downloadButton.href = imageUrl;
+                downloadButton.download = `image_${Date.now()}.png`;
+                downloadButton.style.display = 'inline-block';
+
+                addGeneratedImageCard(imageUrl, prompt);
+            } catch (error) {
+                console.error('Error generating image:', error);
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        function addGeneratedImageCard(imageUrl, prompt) {
+            const container = document.getElementById('generatedImagesContainer');
+
+            const card = document.createElement('div');
+            card.className = 'generated-image-card';
+
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            card.appendChild(img);
+
+            const promptText = document.createElement('div');
+            promptText.className = 'prompt';
+            promptText.innerText = prompt;
+            card.appendChild(promptText);
+
+            card.addEventListener('click', () => {
+                openImageModal(imageUrl, prompt);
+            });
+
+            container.appendChild(card);
+        }
+
+        function openImageModal(imageUrl, prompt) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = modal.querySelector('img');
+            const modalPrompt = modal.querySelector('.prompt');
+
+            modalImg.src = imageUrl;
+            modalPrompt.innerText = prompt;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'none';
+
+            const modal = document.getElementById('imageModal');
+            modal.addEventListener('click', closeImageModal);
+        });
+    </script>
+</body>
+</html>
